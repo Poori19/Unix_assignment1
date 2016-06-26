@@ -1,0 +1,96 @@
+/* -------------------------------- */
+/*  Author:   Poornima Byre Gowda   */
+/*.......CS 590 Assignment .........*/
+/* -------------------------------- */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <string.h>
+
+
+#define BUF_SIZE 1000 /* Defining the buffre size */
+
+int main(int argc, char* argv[])
+{
+        int num = argc - 1;
+        int  i ;
+        int input_fd[num], temp_fd, output_fd, copy_fd, File_fd[num];    /* Input and output file descriptors */
+        struct stat st_source;       /* structure of stat to store the source file info*/
+        struct stat st_destination;  /* structure of stat to store the destination file info*/
+        ssize_t read_bytes ;             /*number of bytes read in source file; */
+        ssize_t write_bytes ;            /*number of bytes written to destination file; */
+        char buffer[BUF_SIZE];       /* buffer */
+        char User_input[2], Directory_path[25];
+
+         //printf("\n %d ", argc);
+
+        for( i = 1; i < num  ; i++)
+        {
+
+      printf("value of argc: %d\n", argc);
+          printf("value of argv: %s\n", argv[i]);
+          input_fd[i] = open( argv[i], O_RDONLY, 666 );
+                  if (input_fd[i] == -1)
+                 {
+                         printf("\n Source File %s ", argv[i]);
+                         perror("  : ");
+                         return -1;
+                 }
+
+    }
+
+         /* openning the Destination File or directory */
+
+            output_fd = open (argv[num], O_RDONLY , 0666) ;
+
+           if (fstat(output_fd, &st_destination))
+                        {
+                         printf("\n fstat error: %s \n ", strerror(errno));
+                        }
+
+                        if (S_ISREG (st_destination.st_mode))
+                        {
+                                printf("\n Enter the Directory address");
+
+                        }
+                        else if (S_ISDIR (st_destination.st_mode))
+                        {
+                                for(i=1 ; i < num -1; i++)
+                                {
+                                strcpy(Directory_path,argv[num]);
+                                strcat (Directory_path, "/");
+                                strcat (Directory_path, argv[i]);
+                                printf ("str1: %s\n str2: %s\n str3: %s\n",argv[1],argv[2],Directory_path);
+                            File_fd[i] = open (Directory_path, O_RDONLY | O_CREAT | O_WRONLY, 0666) ;
+
+                                while((read_bytes = read (input_fd[i], &buffer, BUF_SIZE)) > 0)
+                                {
+                                        write_bytes = write (File_fd[i], &buffer, (ssize_t) read_bytes);
+                                        if(write_bytes != read_bytes)
+                                        {
+                                        /* Write error */
+                                        perror("write");
+                                        return -1;
+                                        }
+                            }
+                                close(File_fd[i]);
+                                }
+                        }
+
+
+
+
+        for( i = 1; i < num ; i++)
+        {
+                 close (input_fd[i]);
+        }
+
+
+        return 0;
+
+}
